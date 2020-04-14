@@ -1,14 +1,17 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxMidi.h"
+//#include "ofxPDSP.h"
 
-class ofApp : public ofBaseApp{
-
+//class ofApp : public ofBaseApp{
+class ofApp : public ofBaseApp, public ofxMidiListener {
 	public:
 
 		void setup();
 		void update();
 		void draw();
+		void exit();
 
 		void keyPressed  (int key);
 		void keyReleased(int key);
@@ -40,4 +43,12 @@ class ofApp : public ofBaseApp{
 		float 	phase;
 		float 	phaseAdder;
 		float 	phaseAdderTarget;
+
+		//-------------------  midi
+		void newMidiMessage(ofxMidiMessage& eventArgs);
+		
+		ofxMidiIn midiIn;
+		std::vector<ofxMidiMessage> midiMessages;
+		std::size_t maxMessages = 10; //< max number of messages to keep track of
+
 };
