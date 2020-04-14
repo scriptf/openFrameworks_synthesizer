@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 #include "ofxMidi.h"
+#include "wave.h"
+
 //#include "ofxPDSP.h"
 
 //class ofApp : public ofBaseApp{
@@ -37,7 +39,15 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 
 		vector <float> lAudio;
 		vector <float> rAudio;
-		
+
+/*		
+		vector <float> wave1;
+		vector <float> wave2;
+		vector <float> wave_sum;
+*/
+		Wave* wave1;
+		Wave* wave2;
+		Wave* wave_sum;
 		//------------------- for the simple sine wave synthesis
 		float 	targetFrequency;
 		float 	phase;
@@ -52,3 +62,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		std::size_t maxMessages = 10; //< max number of messages to keep track of
 
 };
+
+enum MidiCC {
+	Saturday, Sunday, Tuesday, Wednesday, Thursday, Friday
+	};

@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "wave.h"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -31,23 +32,34 @@ void ofApp::setup()
 
 	int bufferSize = 512;
 	sampleRate = 44100;
-	phase = 0;
-	phaseAdder = 0.0f;
+	phase = 0.0;
+	phaseAdder = 0.1f;
 	phaseAdderTarget = 0.0f;
 	volume = 0.1f;
 	bNoise = false;
 
-	lAudio.assign(bufferSize, 0.0);
+	lAudio.assign(bufferSize, 0.0); // vector <float> lAudio;
 	rAudio.assign(bufferSize, 0.0);
 
+	// 波形を保存する
+	//vector<vector<float>> waves;
+	wave1 = new Wave(bufferSize, sampleRate, 500.0, 0, 16);
+	wave2 = new Wave(bufferSize, sampleRate, 500.0, 1, 17);
+	wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
+	/*
+	wave1->assign(bufferSize, 0.0);
+	wave2->assign(bufferSize, 0.0);
+	wave_sum.assign(bufferSize, 0.0);
+	*/
+	
 	soundStream.printDeviceList();
-
 	ofSoundStreamSettings settings;
-
 	// if you want to set the device id to be different than the default:
 	//
-	//	auto devices = soundStream.getDeviceList();
-	//	settings.setOutDevice(devices[3]);
+	auto devices = soundStream.getDeviceList();
+	// 複数出力装置から音声を出力する
+	// settings.setOutDevice(devices[4]);
+	settings.setOutDevice(devices[3]);
 
 	// you can also get devices for an specific api:
 	//
@@ -76,6 +88,7 @@ void ofApp::setup()
 	}
 #endif
 
+	ofLog(OF_LOG_NOTICE, "--------------------------------------");
 	settings.setOutListener(this);
 	settings.sampleRate = sampleRate;
 	settings.numOutputChannels = 2;
@@ -95,16 +108,39 @@ void ofApp::update()
 	for (unsigned int i = 0; i < midiMessages.size(); ++i)
 	{
 		ofxMidiMessage &message = midiMessages[i];
+		// MIDI コントロールのそれぞれのボタンに対応した処理
 		switch (message.control)
 		{
-		case 0:
-			pan =  (float)message.value / 127.0;
+		// ------------------ controler 1
+		case 0: // frequency
+			wave1->setFrequency(2000.0f * (float)message.value / 127.0);
 			break;
-		case 1:
-			heightPct = (float)message.value / 127.0;
-			targetFrequency = 2000.0f * heightPct;
-			phaseAdderTarget = (targetFrequency / (float)sampleRate) * TWO_PI;
-			tmpFreq = targetFrequency; 
+		case 16: // volume
+			wave1->volume = (float)message.value / 127.0;
+			break;
+		case 17:  // pan
+			wave1->pan =  (float)message.value / 127.0;
+			break;
+		case 32:
+			wave1->shape = 0;
+			break;
+		case 48:
+			wave1->shape = 1;
+			break;
+		// ------------------ controler 2
+		case 2:
+			wave2->setFrequency(2000.0f * (float)message.value / 127.0);
+			break;
+		// ------------------ controler 2
+		case 18:
+			wave2->volume = (float)message.value / 127.0;
+			break;
+		case 19:  // pan
+			wave2->pan =  (float)message.value / 127.0;
+			break;
+		// ------------------ controler all
+		case 23:
+			volume =  (float)message.value / 127.0;
 			break;
 		default:
 			break;
@@ -114,13 +150,13 @@ void ofApp::update()
 	//	drawMeter( midiCCs.out(1).meter_output(), 0.05f, 1.0f, xBase, 30, 20, 200);
 	//int width = ofGetWidth();
 	// pan = (float)x / (float)width;
-	//float height = (float)ofGetHeight();
+	// float height = (float)ofGetHeight();
 	// float heightPct = ((height-y) / height);
 
+	/*
 	ofLog(OF_LOG_NOTICE, "pan: %f", pan);
 	ofLog(OF_LOG_NOTICE, "heightPct: %f", heightPct);
 	ofLog(OF_LOG_NOTICE, "targetFrequency: %f", tmpFreq);
-	/*
 	ofLog(OF_LOG_NOTICE, "pan: %f", pan); 
 	ofLog(OF_LOG_NOTICE, "phaseAdderTarget: %f", phaseAdderTarget); 
 	*/
@@ -129,20 +165,104 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-
 	ofSetColor(225);
+	// ofDrawBitmapString("string",x,y);
 	ofDrawBitmapString("AUDIO OUTPUT EXAMPLE", 32, 32);
 	ofDrawBitmapString("press 's' to unpause the audio\npress 'e' to pause the audio", 31, 92);
 
 	ofNoFill();
 
-	// draw the left channel:
+	// -------------------------------------------------
+	// draw the left channel 1:
 	ofPushStyle();
 	ofPushMatrix();
-	ofTranslate(32, 150, 0);
+	ofTranslate(32, 150, 0); // 座標の原点を変更する
+
+	// グラフのスタイル 
+	ofSetColor(225);
+	ofDrawBitmapString("Channel 1 Left", 4, 18);
+	ofDrawBitmapString("sine wave (" + ofToString(wave1->frequency) + "hz) modify with CC #0", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(wave1->volume) + ") modify with CC #16", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(wave1->pan) + ") modify with CC #1", 4, 4*18);
+
+	//ofDrawBitmapString(ofToString(targetfrequency, 2) + "hz) modify with mouse y";
+
+	ofSetLineWidth(1);
+	// グラフの枠を描画する
+	ofDrawRectangle(0, 0, 450, 200);
+
+	// 時系列のスタイル 
+	ofSetColor(245, 58, 135);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	float leftScale = 1 - pan;
+	float rightScale = pan;
+
+	for (unsigned int i = 0; i < wave1->timeseries.size(); i+=2)
+	{
+		float sample = wave1->timeseries[i] 
+		             * wave1->volume
+					 * wave1->leftScale;
+		//iの範囲0-lAudio.size()から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, wave1->timeseries.size(), 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+
+	ofEndShape(false);
+
+	// 座標系をもとに戻す
+	ofPopMatrix();
+	ofPopStyle();
+
+	// -------------------------------------------------
+	// draw the left channel 2:
+	ofPushStyle();
+	ofPushMatrix();
+	ofTranslate(32+450, 150, 0); // 座標の原点を変更する
+
+	// グラフのスタイル 
+	ofSetColor(225);
+	ofDrawBitmapString("Channel 2 Left", 4, 18);
+	ofDrawBitmapString("sine wave (" + ofToString(wave2->frequency) + "hz) modify with CC #2", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(wave2->volume) + ") modify with CC #18", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(wave2->pan) + ") modify with CC #19", 4, 4*18);
+
+	ofSetLineWidth(1);
+	// グラフの枠を描画する
+	ofDrawRectangle(0, 0, 450, 200);
+	
+	// 時系列のスタイル 
+	ofSetColor(245, 58, 135);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < wave2->timeseries.size(); i+=2)
+	{
+		float sample = wave2->timeseries[i]
+		             * wave2->volume
+					 * wave2->leftScale;
+		//iの範囲0-lAudio.size()から別の範囲に変換する
+		float x = ofMap(i, 0, wave2->timeseries.size(), 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+	ofEndShape(false);
+
+	// 座標系をもとに戻す
+	ofPopMatrix();
+	ofPopStyle();
+
+
+	// -------------------------------------------------
+	// draw sum wave:
+	ofPushStyle();
+	ofPushMatrix();
+	ofTranslate(32, 350, 0);
 
 	ofSetColor(225);
-	ofDrawBitmapString("Left Channel", 4, 18);
+	ofDrawBitmapString("Sum", 4, 18);
 
 	ofSetLineWidth(1);
 	ofDrawRectangle(0, 0, 900, 200);
@@ -151,17 +271,35 @@ void ofApp::draw()
 	ofSetLineWidth(3);
 
 	ofBeginShape();
-	for (unsigned int i = 0; i < lAudio.size(); i++)
-	{
-		float x = ofMap(i, 0, lAudio.size(), 0, 900, true);
-		ofVertex(x, 100 - lAudio[i] * 180.0f);
+	for (unsigned int i = 0; i < wave1->timeseries.size(); i++)
+	{	
+		float sample = wave1->timeseries[i] * wave1->volume * wave1->leftScale
+			 		 + wave2->timeseries[i] * wave2->volume * wave2->leftScale;
+		//iの範囲0-lAudio.size()から別の範囲に変換する
+		float x = ofMap(i, 0, wave1->timeseries.size(), 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
 	}
 	ofEndShape(false);
 
 	ofPopMatrix();
 	ofPopStyle();
 
+	ofSetColor(225);
+	string reportString = "volume: (" + ofToString(volume, 2) + ") modify with -/+ keys\npan: (" + ofToString(pan, 2) + ") modify with mouse x\nsynthesis: ";
+	if (!bNoise)
+	{
+		reportString += "sine wave (" + ofToString(targetFrequency, 2) + "hz) modify with mouse y";
+	}
+	else
+	{
+		reportString += "noise";
+	}
+	ofDrawBitmapString(reportString, 32, 579);
+
+	// -------------------------------------------------
 	// draw the right channel:
+	/*
 	ofPushStyle();
 	ofPushMatrix();
 	ofTranslate(32, 350, 0);
@@ -197,6 +335,7 @@ void ofApp::draw()
 		reportString += "noise";
 	}
 	ofDrawBitmapString(reportString, 32, 579);
+	*/
 }
 
 //--------------------------------------------------------------
@@ -233,17 +372,6 @@ void ofApp::keyReleased(int key)
 
 void ofApp::mouseMoved(int x, int y)
 {
-	/*
-	int width = ofGetWidth();
-	pan = (float)x / (float)width;
-	float height = (float)ofGetHeight();
-	float heightPct = ((height-y) / height);
-	targetFrequency = 2000.0f * heightPct;
-	phaseAdderTarget = (targetFrequency / (float) sampleRate) * TWO_PI;
-	ofLog(OF_LOG_NOTICE, "pan: %f", pan); 
-	ofLog(OF_LOG_NOTICE, "targetFrequency: %f", targetFrequency); 
-	ofLog(OF_LOG_NOTICE, "phaseAdderTarget: %f", phaseAdderTarget); 
-	*/
 }
 
 //--------------------------------------------------------------
@@ -287,13 +415,6 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 	float leftScale = 1 - pan;
 	float rightScale = pan;
 
-	// sin (n) seems to have trouble when n is very large, so we
-	// keep phase in the range of 0-TWO_PI like this:
-	while (phase > TWO_PI)
-	{
-		phase -= TWO_PI;
-	}
-
 	if (bNoise == true)
 	{
 		// ---------------------- noise --------------
@@ -305,16 +426,26 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 	}
 	else
 	{
-		// phaseAddr の上限値は
-		phaseAdder = 0.95f * phaseAdder + 0.05f * phaseAdderTarget;
+		// 	phaseAdder = 0.1f;
+		// phaseAdder で phase の値を0-TWO_PI までインクリメントする
+		// phaseAdder = 0.95f * phaseAdder + 0.05f * phaseAdderTarget;
+		wave1->phaseAdder = 0.95f * wave1->phaseAdder + 0.05f * wave1->phaseAdderTarget;
+		wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
+		// buffer.getNumFrames() == 512
 		for (size_t i = 0; i < buffer.getNumFrames(); i++)
 		{
-			phase += phaseAdder;
+			float sample = 0.0;
+			wave1->timeseries[i] = wave1->getSample();
+			///*
+			wave2->timeseries[i] = wave2->getSample();
+			sample = wave1->timeseries[i] + wave2->timeseries[i];
+			//*/
+			//sample = wave1->timeseries[i];
 
-			//sine wave    
-			//float sample = sin(phase);
+			///sample = sin(phase);
+			//sample += sin(2*phase);
 			//square wave  
-			float sample = sin(phase)>0?1:-1;
+			//float sample = sin(phase)>0?1:-1;
 			//saw wave  
 			//float sample = phase / TWO_PI;
 			// S(t)=(t mod(サンプリング周波数/振動数))×((振幅×2)/(サンプリング周波数/振動数))−振幅  
@@ -323,17 +454,13 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 
 			// sampleRate
 
-			/*
-			if(sample < 0.0) {
-				sample += TWO_PI;
-			}
-			sample /= PI;
-			sample -= 1.0;
-			*/
-			ofLog(OF_LOG_NOTICE, "sample: %f", sample); 
-
 			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
 			rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
+
+			/*
+			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
+			rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
+			*/
 		}
 	}
 }
@@ -351,10 +478,12 @@ void ofApp::dragEvent(ofDragInfo dragInfo)
 //--------------------------------------------------------------
 void ofApp::exit()
 {
-
 	// clean up
 	midiIn.closePort();
 	midiIn.removeListener(this);
+	delete wave1;
+	delete wave2;
+	delete wave_sum;
 }
 
 //--------------------------------------------------------------
