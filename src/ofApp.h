@@ -59,7 +59,10 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void newMidiMessage(ofxMidiMessage& eventArgs);
 		
 		ofxMidiIn midiIn;
-		std::vector<ofxMidiMessage> midiMessages;
+//		std::vector<ofxMidiMessage> midiMessages;
+		std::queue<ofxMidiMessage> midiMessages; // good container for FIFO
+
+
 		std::size_t maxMessages = 10; //< max number of messages to keep track of
 
 		ofFile myTextFile;

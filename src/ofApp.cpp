@@ -45,7 +45,7 @@ void ofApp::setup()
 	//vector<vector<float>> waves;
 	wave1 = new Wave(bufferSize, sampleRate, 400.0, 0, 16);
 	wave2 = new Wave(bufferSize, sampleRate, 800.0, 1, 17);
-	wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
+	//wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
 	/*
 	wave1->assign(bufferSize, 0.0);
 	wave2->assign(bufferSize, 0.0);
@@ -88,7 +88,7 @@ void ofApp::setup()
 	}
 #endif
 
-	ofLog(OF_LOG_NOTICE, "--------------------------------------");
+	//ofLog(OF_LOG_NOTICE, "--------------------------------------");
 	settings.setOutListener(this);
 	settings.sampleRate = sampleRate;
 	settings.numOutputChannels = 2;
@@ -110,47 +110,63 @@ void ofApp::update()
 {
 	float heightPct = 0.0;
 	float tmpFreq = 0.0;
-	for (unsigned int i = 0; i < midiMessages.size(); ++i)
-	{
-		ofxMidiMessage &message = midiMessages[i];
+	int i = midiMessages.size();
+    while (!midiMessages.empty()) {
+		ofLog(OF_LOG_NOTICE, "i = %d",i);
+        ofxMidiMessage message = midiMessages.front();
+
 		// MIDI コントロールのそれぞれのボタンに対応した処理
 		switch (message.control)
 		{
-		// ------------------ controler 1
-		case 0: // frequency
-			wave1->setFrequency(2000.0f * (float)message.value / 127.0);
-			break;
-		case 16: // volume
-			wave1->volume = (float)message.value / 127.0;
-			break;
-		case 17:  // pan
-			wave1->pan =  (float)message.value / 127.0;
-			break;
-		case 32:
-			wave1->shape = 0;
-			break;
-		case 48:
-			wave1->shape = 1;
-			break;
-		// ------------------ controler 2
-		case 2:
-			wave2->setFrequency(2000.0f * (float)message.value / 127.0);
-			break;
-		// ------------------ controler 2
-		case 18:
-			wave2->volume = (float)message.value / 127.0;
-			break;
-		case 19:  // pan
-			wave2->pan =  (float)message.value / 127.0;
-			break;
-		// ------------------ controler all
-		case 23:
-			volume =  (float)message.value / 127.0;
-			break;
-		default:
-			break;
+			// ------------------ controler 1
+			case 0: // frequency control
+				wave1->setFrequency(2000.0f * (float)message.value / 127.0);
+				break;
+			case 16: // volume
+				wave1->volume = (float)message.value / 127.0;
+				break;
+			case 17:  // pan
+				wave1->pan =  (float)message.value / 127.0;
+				break;
+			case 32:  // shape
+				wave1->shape = 0;
+				wave1->phase = 0.0;
+				wave1->periodCounter = 0;
+	//			wave1->phase = 0.0;
+				break;
+			case 48:  // shape
+				wave1->shape = 1;
+				wave1->phase = 0.0;
+				wave1->periodCounter = 0;
+				break;
+			// ------------------ controler 2
+			case 2:
+				wave2->setFrequency(2000.0f * (float)message.value / 127.0);
+				break;
+			// ------------------ controler 2
+			case 18:
+				wave2->volume = (float)message.value / 127.0;
+				break;
+			case 19:  // pan
+				wave2->pan =  (float)message.value / 127.0;
+				break;
+			// ------------------ controler all
+			case 23:
+				volume =  (float)message.value / 127.0;
+				break;
+			default:
+				break;
 		}
+		// MIDIメッセージを削除
+		midiMessages.pop();
+		i = i - 1;
 	}
+
+//	for (unsigned int i = 0; i < midiMessages.size(); ++i)
+//	{
+
+		
+//	}
 	// midiCCs.out(1).meter_output() は 0.0 〜 1.0 の小数
 	//	drawMeter( midiCCs.out(1).meter_output(), 0.05f, 1.0f, xBase, 30, 20, 200);
 	//int width = ofGetWidth();
@@ -204,13 +220,13 @@ void ofApp::draw()
 	float leftScale = 1 - pan;
 	float rightScale = pan;
 
-	for (unsigned int i = 0; i < wave1->timeseries.size(); i+=2)
+//	for (unsigned int i = 0; i < wave1->timeseries.size(); i+=2)
+//	for (unsigned int i = 0; i < wave1->periodDiscrete; i++)
+	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = wave1->timeseries[i] 
-		             * wave1->volume
-					 * wave1->leftScale;
-		//iの範囲0-lAudio.size()から別の範囲0-900へ変換する
-		float x = ofMap(i, 0, wave1->timeseries.size(), 0, 450, true);
+		float sample = wave1->timeseries[i];
+		//iの範囲0から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -243,13 +259,14 @@ void ofApp::draw()
 	ofSetLineWidth(3);
 	ofBeginShape();
 	// グラフを描画する
-	for (unsigned int i = 0; i < wave2->timeseries.size(); i+=2)
+	for (unsigned int i = 0; i < 400; i++)
+	//for (unsigned int i = 0; i < wave2->timeseries.size(); i+=2)
 	{
 		float sample = wave2->timeseries[i]
 		             * wave2->volume
 					 * wave2->leftScale;
 		//iの範囲0-lAudio.size()から別の範囲に変換する
-		float x = ofMap(i, 0, wave2->timeseries.size(), 0, 450, true);
+		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -276,15 +293,18 @@ void ofApp::draw()
 	ofSetLineWidth(3);
 
 	ofBeginShape();
-	for (unsigned int i = 0; i < wave1->timeseries.size(); i++)
+	///*
+	for (unsigned int i = 0; i < 400; i ++)
+	//for (unsigned int i = 0; i < wave1->timeseries.size(); i++)
 	{	
-		float sample = wave1->timeseries[i] * wave1->volume * wave1->leftScale
-			 		 + wave2->timeseries[i] * wave2->volume * wave2->leftScale;
+//		float sample = wave1->timeseries[i] + wave2->timeseries[i] ;
+		float sample = lAudio[i];
 		//iの範囲0-lAudio.size()から別の範囲に変換する
-		float x = ofMap(i, 0, wave1->timeseries.size(), 0, 450, true);
+		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
+	//*/
 	ofEndShape(false);
 
 	ofPopMatrix();
@@ -302,45 +322,6 @@ void ofApp::draw()
 	}
 	ofDrawBitmapString(reportString, 32, 579);
 
-	// -------------------------------------------------
-	// draw the right channel:
-	/*
-	ofPushStyle();
-	ofPushMatrix();
-	ofTranslate(32, 350, 0);
-
-	ofSetColor(225);
-	ofDrawBitmapString("Right Channel", 4, 18);
-
-	ofSetLineWidth(1);
-	ofDrawRectangle(0, 0, 900, 200);
-
-	ofSetColor(245, 58, 135);
-	ofSetLineWidth(3);
-
-	ofBeginShape();
-	for (unsigned int i = 0; i < rAudio.size(); i++)
-	{
-		float x = ofMap(i, 0, rAudio.size(), 0, 900, true);
-		ofVertex(x, 100 - rAudio[i] * 180.0f);
-	}
-	ofEndShape(false);
-
-	ofPopMatrix();
-	ofPopStyle();
-
-	ofSetColor(225);
-	string reportString = "volume: (" + ofToString(volume, 2) + ") modify with -/+ keys\npan: (" + ofToString(pan, 2) + ") modify with mouse x\nsynthesis: ";
-	if (!bNoise)
-	{
-		reportString += "sine wave (" + ofToString(targetFrequency, 2) + "hz) modify with mouse y";
-	}
-	else
-	{
-		reportString += "noise";
-	}
-	ofDrawBitmapString(reportString, 32, 579);
-	*/
 }
 
 //--------------------------------------------------------------
@@ -438,7 +419,10 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		// なぜいきなりphaseAdderをphaseAdderTargetにしないか不明だが、
 		// 時間が経過すると phaseAdder と phaseAdderTarget ほぼ等しくなる。
 		wave1->phaseAdder = 0.95f * wave1->phaseAdder + 0.05f * wave1->phaseAdderTarget;
-		wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
+		// wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
+		// wave1->phase = 0.0;
+		// wave2->phase = 0.0;
+	
 		//myTextFile << "phaseAdder";
 		myTextFile << countSoundFrame << "," << ofToString(wave1->phaseAdder) << "," << ofToString(wave1->phaseAdderTarget)<< endl;
 		countSoundFrame++;
@@ -446,10 +430,12 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		for (size_t i = 0; i < buffer.getNumFrames(); i++)
 		{
 			float sample = 0.0;
-			wave1->timeseries[i] = wave1->getSample();
+			//wave1->timeseries[i] = wave1->getSample();
+			//wave2->timeseries[i] = wave2->getSample();
+			
 			///*
-			wave2->timeseries[i] = wave2->getSample();
-			sample = wave1->timeseries[i] + wave2->timeseries[i];
+			//sample = wave1->getSample() + wave2->getSample();
+			sample = wave1->getSample();
 			//*/
 			//sample = wave1->timeseries[i];
 
@@ -464,9 +450,15 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
        		//phaseAdderTarget = (targetFrequency / (float)sampleRate) * TWO_PI;
 
 			// sampleRate
-
+			/*
 			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
 			rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
+			*/
+
+			// buffer.getNumChannels() : 2
+			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
+//			buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
+
 
 			/*
 			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
@@ -494,12 +486,15 @@ void ofApp::exit()
 	midiIn.removeListener(this);
 	delete wave1;
 	delete wave2;
-	delete wave_sum;
+//	delete wave_sum;
 }
 
 //--------------------------------------------------------------
 void ofApp::newMidiMessage(ofxMidiMessage &msg)
 {
+    midiMessages.push(msg);
+
+	/*
 	// add the latest message to the message queue
 	midiMessages.push_back(msg);
 
@@ -507,5 +502,6 @@ void ofApp::newMidiMessage(ofxMidiMessage &msg)
 	while (midiMessages.size() > maxMessages)
 	{
 		midiMessages.erase(midiMessages.begin());
-	}
+	}*/
+
 }

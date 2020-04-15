@@ -5,6 +5,8 @@ class Wave {
 
 public:
     int sampleRate;
+    int periodDiscrete; // 離散信号の周期
+    int periodCounter;  // 離散信号が一周することを監視する
     float frequency;
     float phase;
     float phaseAdder;

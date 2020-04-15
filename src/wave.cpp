@@ -1,27 +1,45 @@
-
 #include "wave.h"
 
-//Wave::Wave(int bufferSize, float frequency_, int midiCcVolume_, int midiCcPan_){
+
 Wave::Wave(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, int midiCcPan)
     :sampleRate(sampleRate)
+    ,periodDiscrete(floor((float)sampleRate/frequency))
+    ,periodCounter(0)
     ,frequency(frequency)
     ,phase(0.0)
     ,phaseAdder(0.1f)
     ,phaseAdderTarget((frequency / (float) sampleRate)*TWO_PI)
-    ,volume(0.45f)
+    ,volume(0.3f)
     ,pan(0.0)
     ,leftScale(1.0 - pan)
 	,rightScale(pan)
     ,midiCcVolume(midiCcVolume)
     ,midiCcPan(midiCcPan)
+    ,shape(0) // sin wave, 1 is rectable
 {
-    timeseries.assign(bufferSize, 0.0);
-    shape = 0; // sin wave, 1 is rectable
+//    timeseries.assign(bufferSize, 0.0);
+    timeseries.assign(sampleRate, 0.0);
+    ofLog(OF_LOG_NOTICE, "============================");
+    ofLog(OF_LOG_NOTICE, "aaaaaaaaaaaa: %f", (float)sampleRate/frequency);
+   	ofLog(OF_LOG_NOTICE, "periodDiscrete: %d", this->periodDiscrete);
+   	ofLog(OF_LOG_NOTICE, "shape: %d", this->shape);
 }
 
 float Wave::setFrequency(float frequency) {
+    // 周期の計算が無限大に発散するのを防ぐ
+    if(frequency < 1){
+        frequency = 1.0;
+    }
     this->frequency = frequency;
     this->phaseAdderTarget = (this->frequency / (float)this->sampleRate) * TWO_PI;
+
+    periodDiscrete = floor((float)sampleRate/frequency); // 離散化した時の周期
+    phase = 0.0;
+    periodCounter = 0;
+    
+	//ofLog(OF_LOG_NOTICE, "frequency: %f", this->frequency);
+   	//ofLog(OF_LOG_NOTICE, "periodDiscrete: %d", this->periodDiscrete);
+
     //this->phaseAdder = 0.95f * this->phaseAdder + 0.05f * this->phaseAdderTarget;
     //this->phaseAdder = this->phaseAdderTarget;
 }
@@ -29,22 +47,55 @@ float Wave::setFrequency(float frequency) {
 float Wave::getSample(){
     // sin (n) seems to have trouble when n is very large, so we
 	// keep phase in the range of 0-TWO_PI like this:
-	while (phase > TWO_PI)
-	{
-		phase = 0.0;
-	}
-    //phase += phaseAdder;
-    phase += phaseAdderTarget;
+	//if (phase > TWO_PI)
+
     /*
 	ofLog(OF_LOG_NOTICE, "phase: %f", phase); 
 	ofLog(OF_LOG_NOTICE, "f: %f", frequency); 
 	ofLog(OF_LOG_NOTICE, "t: %f", phase*frequency*TWO_PI); 
     */
+    float result = 0.0;
     switch(shape){
         case 0:
-            return sin(phase) * volume;
+//            result = sin(phase) * volume;
+            result = sin(phase);
+            break;
         case 1:
-           	return sin(phase)>0 ? volume : -volume;
+///           	result = sin(phase)>0 ? volume : -volume;
+           	result = sin(phase)>0 ? 1 : -1;
+            break;
+        default:
+//            result = sin(phase) * volume;
+            result = sin(phase);
+            break;
     }
-    return sin(phase) * volume;
+
+    phase += phaseAdderTarget;
+
+
+    /*
+    if(phase > TWO_PI){
+        phase = 0.0;
+    }
+    else{
+        phase += phaseAdderTarget;
+    }
+    */
+
+    
+    // 一周期分の時系列データを保存しておく  
+    if(periodCounter < sampleRate){
+        this->timeseries[periodCounter] = result;
+        periodCounter++;
+    }
+    // ここを else で書くとプツプツとノイズが入るので。
+    // if文を分けた
+
+    if(phase > TWO_PI){
+        phase = 0.0;
+    }
+    //ofLog(OF_LOG_NOTICE, "result: %f", result);
+
+    //phase += phaseAdder;
+    return result;
 }
