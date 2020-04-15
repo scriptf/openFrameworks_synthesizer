@@ -37,6 +37,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		bool 	bNoise;
 		float 	volume;
 
+		int countSoundFrame;
 		vector <float> lAudio;
 		vector <float> rAudio;
 
@@ -61,6 +62,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		std::vector<ofxMidiMessage> midiMessages;
 		std::size_t maxMessages = 10; //< max number of messages to keep track of
 
+		ofFile myTextFile;
+	
 };
 
 enum MidiCC {

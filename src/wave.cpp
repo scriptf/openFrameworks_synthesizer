@@ -33,7 +33,8 @@ float Wave::getSample(){
 	{
 		phase = 0.0;
 	}
-    phase += phaseAdder;
+    //phase += phaseAdder;
+    phase += phaseAdderTarget;
     /*
 	ofLog(OF_LOG_NOTICE, "phase: %f", phase); 
 	ofLog(OF_LOG_NOTICE, "f: %f", frequency); 

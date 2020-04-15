@@ -43,8 +43,8 @@ void ofApp::setup()
 
 	// 波形を保存する
 	//vector<vector<float>> waves;
-	wave1 = new Wave(bufferSize, sampleRate, 500.0, 0, 16);
-	wave2 = new Wave(bufferSize, sampleRate, 500.0, 1, 17);
+	wave1 = new Wave(bufferSize, sampleRate, 400.0, 0, 16);
+	wave2 = new Wave(bufferSize, sampleRate, 800.0, 1, 17);
 	wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
 	/*
 	wave1->assign(bufferSize, 0.0);
@@ -95,6 +95,11 @@ void ofApp::setup()
 	settings.numInputChannels = 0;
 	settings.bufferSize = bufferSize;
 	soundStream.setup(settings);
+
+	countSoundFrame = 0;
+	ofFile::removeFile("text.txt");
+	myTextFile.open("text.txt",ofFile::Append);
+	myTextFile << "countSoundFrame" << "," << "phaseAdder" << "," << "phaseAdderTarget" << endl;
 
 	// on OSX: if you want to use ofSoundPlayer together with ofSoundStream you need to synchronize buffersizes.
 	// use ofFmodSetBuffersize(bufferSize) to set the buffersize in fmodx prior to loading a file.
@@ -217,7 +222,7 @@ void ofApp::draw()
 	ofPopStyle();
 
 	// -------------------------------------------------
-	// draw the left channel 2:
+	// Channel 2 Left:
 	ofPushStyle();
 	ofPushMatrix();
 	ofTranslate(32+450, 150, 0); // 座標の原点を変更する
@@ -426,11 +431,17 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 	}
 	else
 	{
-		// 	phaseAdder = 0.1f;
+
+		// phaseAdder = 0.1f;
 		// phaseAdder で phase の値を0-TWO_PI までインクリメントする
 		// phaseAdder = 0.95f * phaseAdder + 0.05f * phaseAdderTarget;
+		// なぜいきなりphaseAdderをphaseAdderTargetにしないか不明だが、
+		// 時間が経過すると phaseAdder と phaseAdderTarget ほぼ等しくなる。
 		wave1->phaseAdder = 0.95f * wave1->phaseAdder + 0.05f * wave1->phaseAdderTarget;
 		wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
+		//myTextFile << "phaseAdder";
+		myTextFile << countSoundFrame << "," << ofToString(wave1->phaseAdder) << "," << ofToString(wave1->phaseAdderTarget)<< endl;
+		countSoundFrame++;
 		// buffer.getNumFrames() == 512
 		for (size_t i = 0; i < buffer.getNumFrames(); i++)
 		{
