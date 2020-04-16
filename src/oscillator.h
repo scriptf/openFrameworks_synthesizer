@@ -1,7 +1,7 @@
 #pragma once
 #include "ofMain.h"
 
-class Wave {
+class Oscillator {
 
 public:
     int sampleRate;
@@ -23,7 +23,7 @@ public:
     int midiCcVolume;
     int midiCcPan;
     //Wave(int bufferSize, float frequency_, int midiCcVolume_, int midiCcPan_);
-    Wave(int bufferSize, int sampleRate, float frequency, int midiCcVolume, int midiCcPan);
+    Oscillator(int bufferSize, int sampleRate, float frequency, int midiCcVolume, int midiCcPan);
     float setFrequency(float frequency);
     //float getSample(float phase); // サンプルを返す
     float getSample(); // サンプルを返す

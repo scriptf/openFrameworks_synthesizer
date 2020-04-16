@@ -1,5 +1,5 @@
 #include "ofApp.h"
-#include "wave.h"
+#include "oscillator.h"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -43,8 +43,8 @@ void ofApp::setup()
 
 	// 波形を保存する
 	//vector<vector<float>> waves;
-	wave1 = new Wave(bufferSize, sampleRate, 400.0, 0, 16);
-	wave2 = new Wave(bufferSize, sampleRate, 800.0, 1, 17);
+	osci1 = new Oscillator(bufferSize, sampleRate, 400.0, 0, 16);
+	osci2 = new Oscillator(bufferSize, sampleRate, 800.0, 1, 17);
 	//wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
 	/*
 	wave1->assign(bufferSize, 0.0);
@@ -119,57 +119,57 @@ void ofApp::update()
 		{
 			// ------------------ controler 1
 			case 0: // frequency control
-				wave1->setFrequency(2000.0f * (float)message.value / 127.0);
+				osci1->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
 			case 16: // volume
-				wave1->volume = (float)message.value / 127.0;
-				wave1->updateTimeseries();
+				osci1->volume = (float)message.value / 127.0;
+				osci1->updateTimeseries();
 				break;
 			case 17:  // pan
-				wave1->pan =  (float)message.value / 127.0;
+				osci1->pan =  (float)message.value / 127.0;
 				break;
-			case 32:  // sin wave
-				wave1->shape = 0;
-				wave1->phase = 0.0;
-				wave1->periodCounter = 0;
-	//			wave1->phase = 0.0;
+			case 32:  // sin osci
+				osci1->shape = 0;
+				osci1->phase = 0.0;
+				osci1->periodCounter = 0;
+	//			osci1->phase = 0.0;
 				break;
 			case 48:  // rectangle wave
-				wave1->shape = 1;
-				wave1->phase = 0.0;
-				wave1->periodCounter = 0;
+				osci1->shape = 1;
+				osci1->phase = 0.0;
+				osci1->periodCounter = 0;
 				break;
 			case 64:  // saw wave
-				wave1->shape = 2;
-				wave1->phase = 0.0;
-				wave1->periodCounter = 0;
+				osci1->shape = 2;
+				osci1->phase = 0.0;
+				osci1->periodCounter = 0;
 				break;
 			// ------------------ controler 2
 			case 2:
-				wave2->setFrequency(2000.0f * (float)message.value / 127.0);
+				osci2->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
 			case 18: // volume
-				wave2->volume = (float)message.value / 127.0;
-				wave2->updateTimeseries();
+				osci2->volume = (float)message.value / 127.0;
+				osci2->updateTimeseries();
 				break;
 			case 19:  // pan
-				wave2->pan =  (float)message.value / 127.0;
+				osci2->pan =  (float)message.value / 127.0;
 				break;
 			case 34:  // sin wave
-				wave2->shape = 0;
-				wave2->phase = 0.0;
-				wave2->periodCounter = 0;
-	//			wave1->phase = 0.0;
+				osci2->shape = 0;
+				osci2->phase = 0.0;
+				osci2->periodCounter = 0;
+	//			osci1->phase = 0.0;
 				break;
 			case 50:  // rectangle wave
-				wave2->shape = 1;
-				wave2->phase = 0.0;
-				wave2->periodCounter = 0;
+				osci2->shape = 1;
+				osci2->phase = 0.0;
+				osci2->periodCounter = 0;
 				break;
 			case 66:  // saw wave
-				wave2->shape = 2;
-				wave2->phase = 0.0;
-				wave2->periodCounter = 0;
+				osci2->shape = 2;
+				osci2->phase = 0.0;
+				osci2->periodCounter = 0;
 				break;
 			// ------------------ controler all
 			case 23:
@@ -203,9 +203,9 @@ void ofApp::draw()
 	// グラフのスタイル 
 	ofSetColor(225);
 	ofDrawBitmapString("Channel 1 Left", 4, 18);
-	ofDrawBitmapString("sine wave (" + ofToString(wave1->frequency) + "hz) modify with CC #0", 4, 2*18);
-	ofDrawBitmapString("volume (" + ofToString(wave1->volume) + ") modify with CC #16", 4, 3*18);
-	ofDrawBitmapString("pan (" + ofToString(wave1->pan) + ") modify with CC #1", 4, 4*18);
+	ofDrawBitmapString("sine wave (" + ofToString(osci1->frequency) + "hz) modify with CC #0", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci1->volume) + ") modify with CC #16", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci1->pan) + ") modify with CC #1", 4, 4*18);
 
 	//ofDrawBitmapString(ofToString(targetfrequency, 2) + "hz) modify with mouse y";
 
@@ -223,7 +223,7 @@ void ofApp::draw()
 
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = wave1->LTimeseries[i];
+		float sample = osci1->LTimeseries[i];
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -246,9 +246,9 @@ void ofApp::draw()
 	// グラフのスタイル 
 	ofSetColor(225);
 	ofDrawBitmapString("Channel 2 Left", 4, 18);
-	ofDrawBitmapString("sine wave (" + ofToString(wave2->frequency) + "hz) modify with CC #2", 4, 2*18);
-	ofDrawBitmapString("volume (" + ofToString(wave2->volume) + ") modify with CC #18", 4, 3*18);
-	ofDrawBitmapString("pan (" + ofToString(wave2->pan) + ") modify with CC #19", 4, 4*18);
+	ofDrawBitmapString("sine wave (" + ofToString(osci2->frequency) + "hz) modify with CC #2", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci2->volume) + ") modify with CC #18", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci2->pan) + ") modify with CC #19", 4, 4*18);
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する
@@ -261,7 +261,7 @@ void ofApp::draw()
 	// グラフを描画する
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = wave2->LTimeseries[i];
+		float sample = osci2->LTimeseries[i];
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -293,7 +293,7 @@ void ofApp::draw()
 	ofBeginShape();
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = wave1->LTimeseries[i] + wave2->LTimeseries[i];
+		float sample = osci1->LTimeseries[i] + osci2->LTimeseries[i];
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -412,27 +412,27 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		// phaseAdder = 0.95f * phaseAdder + 0.05f * phaseAdderTarget;
 		// なぜいきなりphaseAdderをphaseAdderTargetにしないか不明だが、
 		// 時間が経過すると phaseAdder と phaseAdderTarget ほぼ等しくなる。
-		wave1->phaseAdder = 0.95f * wave1->phaseAdder + 0.05f * wave1->phaseAdderTarget;
-		wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
-		// wave2->phaseAdder = 0.95f * wave2->phaseAdder + 0.05f * wave2->phaseAdderTarget;
-		// wave1->phase = 0.0;
-		// wave2->phase = 0.0;
+		osci1->phaseAdder = 0.95f * osci1->phaseAdder + 0.05f * osci1->phaseAdderTarget;
+		osci2->phaseAdder = 0.95f * osci2->phaseAdder + 0.05f * osci2->phaseAdderTarget;
+		// osci2->phaseAdder = 0.95f * osci2->phaseAdder + 0.05f * osci2->phaseAdderTarget;
+		// osci1->phase = 0.0;
+		// osci2->phase = 0.0;
 	
 		//myTextFile << "phaseAdder";
-		// myTextFile << countSoundFrame << "," << ofToString(wave1->phaseAdder) << "," << ofToString(wave1->phaseAdderTarget)<< endl;
+		// myTextFile << countSoundFrame << "," << ofToString(osci1->phaseAdder) << "," << ofToString(osci1->phaseAdderTarget)<< endl;
 		// countSoundFrame++;
 		// buffer.getNumFrames() == 512
 		for (size_t i = 0; i < buffer.getNumFrames(); i++)
 		{
 			float sample = 0.0;
-			//wave1->LTimeseries[i] = wave1->getSample();
-			//wave2->LTimeseries[i] = wave2->getSample();
+			//osci1->LTimeseries[i] = osci1->getSample();
+			//osci2->LTimeseries[i] = osci2->getSample();
 			
 			///*
-			sample = wave1->getSample() + wave2->getSample();
-			//sample = wave1->getSample();
+			sample = osci1->getSample() + osci2->getSample();
+			//sample = osci1->getSample();
 			//*/
-			//sample = wave1->LTimeseries[i];
+			//sample = osci1->LTimeseries[i];
 
 			///sample = sin(phase);
 			//sample += sin(2*phase);
@@ -479,8 +479,8 @@ void ofApp::exit()
 	// clean up
 	midiIn.closePort();
 	midiIn.removeListener(this);
-	delete wave1;
-	delete wave2;
+	delete osci1;
+	delete osci2;
 	vector<float>().swap(lAudio);
 	vector<float>().swap(rAudio);
 

@@ -1,7 +1,6 @@
-#include "wave.h"
+#include "oscillator.h"
 
-
-Wave::Wave(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, int midiCcPan)
+Oscillator::Oscillator(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, int midiCcPan)
     :sampleRate(sampleRate)
     ,periodDiscrete(floor((float)sampleRate/frequency))
     ,periodCounter(0)
@@ -25,7 +24,7 @@ Wave::Wave(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, i
    	ofLog(OF_LOG_NOTICE, "shape: %d", this->shape);
 }
 
-float Wave::setFrequency(float frequency) {
+float Oscillator::setFrequency(float frequency) {
     // 周期の計算が無限大に発散するのを防ぐ
     if(frequency < 1){
         frequency = 1.0;
@@ -46,7 +45,7 @@ float Wave::setFrequency(float frequency) {
  * volume を操作したとき描画をアップデートする
  *
  * */
-void Wave::updateTimeseries() {
+void Oscillator::updateTimeseries() {
     this->phase = 0.0;       // (0,0)から波形を描画する
     this->periodCounter = 0; 
 }
@@ -55,7 +54,7 @@ void Wave::updateTimeseries() {
 /**
  * Generate normalized wave -1.0 to 1.0 .
  */
-float Wave::getSample(){
+float Oscillator::getSample(){
     // sin (n) seems to have trouble when n is very large, so we
 	// keep phase in the range of 0-TWO_PI like this:
 	//if (phase > TWO_PI)
