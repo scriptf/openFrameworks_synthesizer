@@ -18,7 +18,7 @@ public:
     int shape;
     // lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
     // rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
-    vector <float> timeseries;
+    vector <float> LTimeseries;
     
     int midiCcVolume;
     int midiCcPan;
@@ -27,6 +27,8 @@ public:
     float setFrequency(float frequency);
     //float getSample(float phase); // サンプルを返す
     float getSample(); // サンプルを返す
+    void updateTimeseries();
+
 private:
 
     /*

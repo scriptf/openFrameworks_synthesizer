@@ -18,7 +18,7 @@ Wave::Wave(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, i
     ,shape(0) // sin wave, 1 is rectable
 {
 //    timeseries.assign(bufferSize, 0.0);
-    timeseries.assign(sampleRate, 0.0);
+    LTimeseries.assign(sampleRate, 0.0);
     ofLog(OF_LOG_NOTICE, "============================");
     ofLog(OF_LOG_NOTICE, "aaaaaaaaaaaa: %f", (float)sampleRate/frequency);
    	ofLog(OF_LOG_NOTICE, "periodDiscrete: %d", this->periodDiscrete);
@@ -35,15 +35,26 @@ float Wave::setFrequency(float frequency) {
 
     periodDiscrete = floor((float)sampleRate/frequency); // 離散化した時の周期
     phase = 0.0;
-    periodCounter = 0;
-    
+    periodCounter = 0;   
 	//ofLog(OF_LOG_NOTICE, "frequency: %f", this->frequency);
    	//ofLog(OF_LOG_NOTICE, "periodDiscrete: %d", this->periodDiscrete);
-
     //this->phaseAdder = 0.95f * this->phaseAdder + 0.05f * this->phaseAdderTarget;
     //this->phaseAdder = this->phaseAdderTarget;
 }
 
+/*
+ * volume を操作したとき描画をアップデートする
+ *
+ * */
+void Wave::updateTimeseries() {
+    this->phase = 0.0;       // (0,0)から波形を描画する
+    this->periodCounter = 0; 
+}
+
+
+/**
+ * Generate normalized wave -1.0 to 1.0 .
+ */
 float Wave::getSample(){
     // sin (n) seems to have trouble when n is very large, so we
 	// keep phase in the range of 0-TWO_PI like this:
@@ -58,15 +69,19 @@ float Wave::getSample(){
     switch(shape){
         case 0:
 //            result = sin(phase) * volume;
-            result = sin(phase);
+            result = sin(phase) * this->volume * this->leftScale;
             break;
         case 1:
-///           	result = sin(phase)>0 ? volume : -volume;
-           	result = sin(phase)>0 ? 1 : -1;
+           	result = sin(phase)>0 ? this->volume * this->leftScale: -this->volume * this->leftScale;
+           	//result = sin(phase)>0 ? 1 : -1;
             break;
+        case 2:
+           	result = 2.0*(phase/TWO_PI - floor(1.0/2.0 + phase/TWO_PI)) * this->volume * this->leftScale;
+           	//result = sin(phase)>0 ? 1 : -1;
+            break;           
         default:
 //            result = sin(phase) * volume;
-            result = sin(phase);
+            result = sin(phase) * this->volume * this->leftScale;
             break;
     }
 
@@ -85,7 +100,7 @@ float Wave::getSample(){
     
     // 一周期分の時系列データを保存しておく  
     if(periodCounter < sampleRate){
-        this->timeseries[periodCounter] = result;
+        this->LTimeseries[periodCounter] = result * this->volume * this->leftScale;
         periodCounter++;
     }
     // ここを else で書くとプツプツとノイズが入るので。
