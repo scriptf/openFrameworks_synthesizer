@@ -4,6 +4,10 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
+	pan = 0.0;
+	leftScale = 1.0 - pan;
+    rightScale = pan;
+
 	// midi ------------------------------------------------------------
 	ofSetVerticalSync(true);
 	ofSetLogLevel(OF_LOG_VERBOSE);
@@ -44,7 +48,7 @@ void ofApp::setup()
 	// 波形を保存する
 	//vector<vector<float>> waves;
 	osci1 = new Oscillator(bufferSize, sampleRate, 400.0, 0, 16);
-	osci2 = new Oscillator(bufferSize, sampleRate, 800.0, 1, 17);
+	osci2 = new Oscillator(bufferSize, sampleRate, 400.0, 1, 17);
 	//wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
 	/*
 	wave1->assign(bufferSize, 0.0);
@@ -59,7 +63,8 @@ void ofApp::setup()
 	auto devices = soundStream.getDeviceList();
 	// 複数出力装置から音声を出力する
 	// settings.setOutDevice(devices[4]);
-	settings.setOutDevice(devices[4]);
+	//settings.setOutDevice(devices[4]);
+	settings.setOutDevice(devices[1]);
 
 	// you can also get devices for an specific api:
 	//
@@ -122,54 +127,38 @@ void ofApp::update()
 				osci1->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
 			case 16: // volume
-				osci1->volume = (float)message.value / 127.0;
-				osci1->updateTimeseries();
+				osci1->setVolume((float)message.value / 127.0);
 				break;
 			case 17:  // pan
-				osci1->pan =  (float)message.value / 127.0;
+				osci1->setPan((float)message.value / 127.0);
 				break;
 			case 32:  // sin osci
-				osci1->shape = 0;
-				osci1->phase = 0.0;
-				osci1->periodCounter = 0;
-	//			osci1->phase = 0.0;
+				osci1->setWaveShape(0);
 				break;
 			case 48:  // rectangle wave
-				osci1->shape = 1;
-				osci1->phase = 0.0;
-				osci1->periodCounter = 0;
+				osci1->setWaveShape(1);
 				break;
 			case 64:  // saw wave
-				osci1->shape = 2;
-				osci1->phase = 0.0;
-				osci1->periodCounter = 0;
+				osci1->setWaveShape(2);
 				break;
 			// ------------------ controler 2
 			case 2:
 				osci2->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
 			case 18: // volume
-				osci2->volume = (float)message.value / 127.0;
-				osci2->updateTimeseries();
+				osci2->setVolume((float)message.value / 127.0);
 				break;
 			case 19:  // pan
-				osci2->pan =  (float)message.value / 127.0;
+				osci2->setPan((float)message.value / 127.0);
 				break;
 			case 34:  // sin wave
-				osci2->shape = 0;
-				osci2->phase = 0.0;
-				osci2->periodCounter = 0;
-	//			osci1->phase = 0.0;
+				osci2->setWaveShape(0);
 				break;
 			case 50:  // rectangle wave
-				osci2->shape = 1;
-				osci2->phase = 0.0;
-				osci2->periodCounter = 0;
+				osci2->setWaveShape(1);
 				break;
 			case 66:  // saw wave
-				osci2->shape = 2;
-				osci2->phase = 0.0;
-				osci2->periodCounter = 0;
+				osci2->setWaveShape(2);
 				break;
 			// ------------------ controler all
 			case 23:
@@ -187,6 +176,8 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+	float leftScale = 1 - pan;
+	float rightScale = pan;
 	ofSetColor(225);
 	// ofDrawBitmapString("string",x,y);
 	ofDrawBitmapString("AUDIO OUTPUT EXAMPLE", 32, 32);
@@ -218,18 +209,31 @@ void ofApp::draw()
 	ofSetLineWidth(3);
 	ofBeginShape();
 	// グラフを描画する
-	float leftScale = 1 - pan;
-	float rightScale = pan;
-
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = osci1->LTimeseries[i];
+		//float sample = osci1->LTimeseries[i];
+		float sample = osci1->getLGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
+	ofEndShape(false);
 
+	// 時系列のスタイル 
+	ofSetColor(0, 255, 255);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < 400; i ++)
+	{
+		//float sample = osci1->LTimeseries[i];
+		float sample = osci1->getRGraph(i);		
+		//iの範囲0から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, 400, 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
 	ofEndShape(false);
 
 	// 座標系をもとに戻す
@@ -237,7 +241,7 @@ void ofApp::draw()
 	ofPopStyle();
 
 	// -------------------------------------------------
-	// Channel 2 Left:
+	// Channel 2
 	// -------------------------------------------------
 	ofPushStyle();
 	ofPushMatrix();
@@ -261,7 +265,24 @@ void ofApp::draw()
 	// グラフを描画する
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = osci2->LTimeseries[i];
+		//float sample = osci2->LTimeseries[i];
+		float sample = osci2->getLGraph(i);		
+		//iの範囲0から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, 400, 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+	ofEndShape(false);
+
+	// 時系列のスタイル 
+	ofSetColor(0, 255, 255);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < 400; i ++)
+	{
+		//float sample = osci1->LTimeseries[i];
+		float sample = osci2->getRGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -293,13 +314,31 @@ void ofApp::draw()
 	ofBeginShape();
 	for (unsigned int i = 0; i < 400; i ++)
 	{
-		float sample = osci1->LTimeseries[i] + osci2->LTimeseries[i];
+		//float sample = osci1->LTimeseries[i] + osci2->LTimeseries[i];
+		float sample = osci1->getLGraph(i) + osci2->getLGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
 	ofEndShape(false);
+
+	ofSetColor(0, 255, 255);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < 400; i ++)
+	{
+		//float sample = osci1->LTimeseries[i];
+		float sample = osci1->getRGraph(i) + osci2->getRGraph(i);		
+		//iの範囲0から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, 400, 0, 450, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+	ofEndShape(false);
+
+
 
 	ofPopMatrix();
 	ofPopStyle();
@@ -391,10 +430,6 @@ void ofApp::windowResized(int w, int h)
 //--------------------------------------------------------------
 void ofApp::audioOut(ofSoundBuffer &buffer)
 {
-	//pan = 0.5f;
-	float leftScale = 1 - pan;
-	float rightScale = pan;
-
 	if (bNoise == true)
 	{
 		// ---------------------- noise --------------
@@ -424,22 +459,18 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		// buffer.getNumFrames() == 512
 		for (size_t i = 0; i < buffer.getNumFrames(); i++)
 		{
-			float sample = 0.0;
-			//osci1->LTimeseries[i] = osci1->getSample();
-			//osci2->LTimeseries[i] = osci2->getSample();
-			
+//			float sample = 0.0;
+			float lSample = 0.0;
+			float rSample = 0.0;
+		
 			///*
-			sample = osci1->getSample() + osci2->getSample();
+			//sample = osci1->getLSample() + osci2->getLSample();
+			lSample = osci1->getLSample() + osci2->getLSample();
+			rSample = osci1->getRSample() + osci2->getRSample();
 			//sample = osci1->getSample();
 			//*/
 			//sample = osci1->LTimeseries[i];
 
-			///sample = sin(phase);
-			//sample += sin(2*phase);
-			//square wave  
-			//float sample = sin(phase)>0?1:-1;
-			//saw wave  
-			//float sample = phase / TWO_PI;
 			// S(t)=(t mod(サンプリング周波数/振動数))×((振幅×2)/(サンプリング周波数/振動数))−振幅  
 			//float sample = fmod(phase , (float)sampleRate / targetFrequency) - 1.0;  
        		//phaseAdderTarget = (targetFrequency / (float)sampleRate) * TWO_PI;
@@ -451,14 +482,8 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 			*/
 
 			// buffer.getNumChannels() : 2
-			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
-//			buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
-
-
-			/*
-			lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
-			rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
-			*/
+			lAudio[i] = buffer[i * buffer.getNumChannels()] = lSample * volume;
+			rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = rSample * volume;
 		}
 	}
 }
@@ -491,15 +516,4 @@ void ofApp::exit()
 void ofApp::newMidiMessage(ofxMidiMessage &msg)
 {
     midiMessages.push(msg);
-
-	/*
-	// add the latest message to the message queue
-	midiMessages.push_back(msg);
-
-	// remove any old messages if we have too many
-	while (midiMessages.size() > maxMessages)
-	{
-		midiMessages.erase(midiMessages.begin());
-	}*/
-
 }

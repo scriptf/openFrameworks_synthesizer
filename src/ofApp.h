@@ -25,15 +25,17 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void gotMessage(ofMessage msg);
 		
 		void audioOut(ofSoundBuffer & buffer);
-		
-		
+				
 		ofSoundStream soundStream;
 
-		float 	pan;
 		int		sampleRate;
 		bool 	bNoise;
 		float 	volume;
 
+		float 	pan;
+		float   leftScale;
+		float   rightScale;
+	
 		int countSoundFrame;
 		vector <float> lAudio;
 		vector <float> rAudio;

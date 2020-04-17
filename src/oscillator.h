@@ -19,14 +19,24 @@ public:
     // lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
     // rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
     vector <float> LTimeseries;
+    vector <float> timeseries;
     
     int midiCcVolume;
     int midiCcPan;
     //Wave(int bufferSize, float frequency_, int midiCcVolume_, int midiCcPan_);
     Oscillator(int bufferSize, int sampleRate, float frequency, int midiCcVolume, int midiCcPan);
+    ~Oscillator();
     float setFrequency(float frequency);
+    float setVolume(float volume);
+    float setPan(float pan);
+    float setWaveShape(int shape);
+    
     //float getSample(float phase); // サンプルを返す
     float getSample(); // サンプルを返す
+    float getLSample(); // サンプルを返す
+    float getRSample(); // サンプルを返す
+    float getLGraph(int i);
+    float getRGraph(int i);
     void updateTimeseries();
 
 private:
