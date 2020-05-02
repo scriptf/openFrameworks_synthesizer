@@ -42,6 +42,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 
 		Oscillator* osci1;
 		Oscillator* osci2;
+		Oscillator* osci3;
 		Oscillator* osci_sum;
 		//------------------- for the simple sine wave synthesis
 		float 	targetFrequency;

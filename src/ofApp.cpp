@@ -47,8 +47,9 @@ void ofApp::setup()
 
 	// 波形を保存する
 	//vector<vector<float>> waves;
-	osci1 = new Oscillator(bufferSize, sampleRate, 400.0, 0, 16);
-	osci2 = new Oscillator(bufferSize, sampleRate, 400.0, 1, 17);
+	osci1 = new Oscillator(bufferSize, sampleRate,  400.0, 0, 16);
+	osci2 = new Oscillator(bufferSize, sampleRate,  800.0, 1, 17);
+	osci3 = new Oscillator(bufferSize, sampleRate, 1200.0, 1, 17);
 	//wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
 	/*
 	wave1->assign(bufferSize, 0.0);
@@ -160,6 +161,27 @@ void ofApp::update()
 			case 66:  // saw wave
 				osci2->setWaveShape(2);
 				break;
+			// ------------------ controler 3
+			/*
+			case 2:
+				osci3->setFrequency(2000.0f * (float)message.value / 127.0);
+				break;
+			case 18: // volume
+				osci3->setVolume((float)message.value / 127.0);
+				break;
+			case 19:  // pan
+				osci3->setPan((float)message.value / 127.0);
+				break;
+			case 34:  // sin wave
+				osci3->setWaveShape(0);
+				break;
+			case 50:  // rectangle wave
+				osci3->setWaveShape(1);
+				break;
+			case 66:  // saw wave
+				osci3->setWaveShape(2);
+				break;
+			*/
 			// ------------------ controler all
 			case 23:
 				volume =  (float)message.value / 127.0;
@@ -176,6 +198,8 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+	// width = 900
+	int gWidth = 300; // Width of graph 
 	float leftScale = 1 - pan;
 	float rightScale = pan;
 	ofSetColor(225);
@@ -186,14 +210,15 @@ void ofApp::draw()
 	ofNoFill();
 
 	// -------------------------------------------------
-	// draw the left channel 1:
+	// draw Oscillator 1
+	// -------------------------------------------------
 	ofPushStyle();
 	ofPushMatrix();
 	ofTranslate(32, 150, 0); // 座標の原点を変更する
 
 	// グラフのスタイル 
 	ofSetColor(225);
-	ofDrawBitmapString("Channel 1 Left", 4, 18);
+	ofDrawBitmapString("Oscillator 1", 4, 18);
 	ofDrawBitmapString("sine wave (" + ofToString(osci1->frequency) + "hz) modify with CC #0", 4, 2*18);
 	ofDrawBitmapString("volume (" + ofToString(osci1->volume) + ") modify with CC #16", 4, 3*18);
 	ofDrawBitmapString("pan (" + ofToString(osci1->pan) + ") modify with CC #1", 4, 4*18);
@@ -202,7 +227,7 @@ void ofApp::draw()
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する
-	ofDrawRectangle(0, 0, 450, 200);
+	ofDrawRectangle(0, 0, gWidth, 200);
 
 	// 時系列のスタイル 
 	ofSetColor(245, 58, 135);
@@ -214,7 +239,7 @@ void ofApp::draw()
 		//float sample = osci1->LTimeseries[i];
 		float sample = osci1->getLGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
-		float x = ofMap(i, 0, 400, 0, 450, true);
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -230,7 +255,7 @@ void ofApp::draw()
 		//float sample = osci1->LTimeseries[i];
 		float sample = osci1->getRGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
-		float x = ofMap(i, 0, 400, 0, 450, true);
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -241,22 +266,22 @@ void ofApp::draw()
 	ofPopStyle();
 
 	// -------------------------------------------------
-	// Channel 2
+	// draw Oscillator 2
 	// -------------------------------------------------
 	ofPushStyle();
 	ofPushMatrix();
-	ofTranslate(32+450, 150, 0); // 座標の原点を変更する
+	ofTranslate(32+gWidth, 150, 0); // 座標の原点を変更する
 
-	// グラフのスタイル 
+	// グラフのスタイル s
 	ofSetColor(225);
-	ofDrawBitmapString("Channel 2 Left", 4, 18);
+	ofDrawBitmapString("Oscillator 2", 4, 18);
 	ofDrawBitmapString("sine wave (" + ofToString(osci2->frequency) + "hz) modify with CC #2", 4, 2*18);
 	ofDrawBitmapString("volume (" + ofToString(osci2->volume) + ") modify with CC #18", 4, 3*18);
 	ofDrawBitmapString("pan (" + ofToString(osci2->pan) + ") modify with CC #19", 4, 4*18);
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する
-	ofDrawRectangle(0, 0, 450, 200);
+	ofDrawRectangle(0, 0, gWidth, 200);
 	
 	// 時系列のスタイル 
 	ofSetColor(245, 58, 135);
@@ -267,8 +292,8 @@ void ofApp::draw()
 	{
 		//float sample = osci2->LTimeseries[i];
 		float sample = osci2->getLGraph(i);		
-		//iの範囲0から別の範囲0-900へ変換する
-		float x = ofMap(i, 0, 400, 0, 450, true);
+		//iの範囲0から別の範囲0-gWidthへ変換する
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -284,7 +309,61 @@ void ofApp::draw()
 		//float sample = osci1->LTimeseries[i];
 		float sample = osci2->getRGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
-		float x = ofMap(i, 0, 400, 0, 450, true);
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+	ofEndShape(false);
+
+	// 座標系をもとに戻す
+	ofPopMatrix();
+	ofPopStyle();
+
+	// -------------------------------------------------
+	// draw Oscillator 3
+	// -------------------------------------------------
+	ofPushStyle();
+	ofPushMatrix();
+	ofTranslate(32+2*gWidth, 150, 0); // 座標の原点を変更する
+
+	// グラフのスタイル 
+	ofSetColor(225);
+	ofDrawBitmapString("Oscillator 3", 4, 18);
+	ofDrawBitmapString("sine wave (" + ofToString(osci3->frequency) + "hz) modify with CC #2", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci3->volume) + ") modify with CC #18", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci3->pan) + ") modify with CC #19", 4, 4*18);
+
+	ofSetLineWidth(1);
+	// グラフの枠を描画する
+	ofDrawRectangle(0, 0, gWidth, 200);
+	
+	// 時系列のスタイル 
+	ofSetColor(245, 58, 135);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < 400; i ++)
+	{
+		//float sample = osci3->LTimeseries[i];
+		float sample = osci3->getLGraph(i);		
+		//iの範囲0から別の範囲0-gWidthへ変換する
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
+		// 点を描画する
+		ofVertex(x, 100 - sample * 180.0f);
+	}
+	ofEndShape(false);
+
+	// 時系列のスタイル 
+	ofSetColor(0, 255, 255);
+	ofSetLineWidth(3);
+	ofBeginShape();
+	// グラフを描画する
+	for (unsigned int i = 0; i < 400; i ++)
+	{
+		//float sample = osci1->LTimeseries[i];
+		float sample = osci3->getRGraph(i);		
+		//iの範囲0から別の範囲0-900へ変換する
+		float x = ofMap(i, 0, 400, 0, gWidth, true);
 		// 点を描画する
 		ofVertex(x, 100 - sample * 180.0f);
 	}
@@ -315,7 +394,7 @@ void ofApp::draw()
 	for (unsigned int i = 0; i < 400; i ++)
 	{
 		//float sample = osci1->LTimeseries[i] + osci2->LTimeseries[i];
-		float sample = osci1->getLGraph(i) + osci2->getLGraph(i);		
+		float sample = osci1->getLGraph(i) + osci2->getLGraph(i) + osci3->getLGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -330,7 +409,7 @@ void ofApp::draw()
 	for (unsigned int i = 0; i < 400; i ++)
 	{
 		//float sample = osci1->LTimeseries[i];
-		float sample = osci1->getRGraph(i) + osci2->getRGraph(i);		
+		float sample = osci1->getRGraph(i) + osci2->getRGraph(i) + osci3->getRGraph(i);		
 		//iの範囲0から別の範囲0-900へ変換する
 		float x = ofMap(i, 0, 400, 0, 450, true);
 		// 点を描画する
@@ -449,6 +528,7 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		// 時間が経過すると phaseAdder と phaseAdderTarget ほぼ等しくなる。
 		osci1->phaseAdder = 0.95f * osci1->phaseAdder + 0.05f * osci1->phaseAdderTarget;
 		osci2->phaseAdder = 0.95f * osci2->phaseAdder + 0.05f * osci2->phaseAdderTarget;
+		osci3->phaseAdder = 0.95f * osci3->phaseAdder + 0.05f * osci3->phaseAdderTarget;
 		// osci2->phaseAdder = 0.95f * osci2->phaseAdder + 0.05f * osci2->phaseAdderTarget;
 		// osci1->phase = 0.0;
 		// osci2->phase = 0.0;
@@ -465,8 +545,8 @@ void ofApp::audioOut(ofSoundBuffer &buffer)
 		
 			///*
 			//sample = osci1->getLSample() + osci2->getLSample();
-			lSample = osci1->getLSample() + osci2->getLSample();
-			rSample = osci1->getRSample() + osci2->getRSample();
+			lSample = osci1->getLSample() + osci2->getLSample() + osci3->getLSample();
+			rSample = osci1->getRSample() + osci2->getRSample() + osci3->getRSample();
 			//sample = osci1->getSample();
 			//*/
 			//sample = osci1->LTimeseries[i];
