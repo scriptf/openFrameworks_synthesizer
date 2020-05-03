@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "oscillator.h"
+#include "midi_controllers.h"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -51,12 +52,7 @@ void ofApp::setup()
 	osci2 = new Oscillator(bufferSize, sampleRate,  800.0, 1, 17);
 	osci3 = new Oscillator(bufferSize, sampleRate, 1200.0, 1, 17);
 	//wave_sum = new Wave(bufferSize, sampleRate, 0.0, 8, 23);
-	/*
-	wave1->assign(bufferSize, 0.0);
-	wave2->assign(bufferSize, 0.0);
-	wave_sum.assign(bufferSize, 0.0);
-	*/
-	
+
 	soundStream.printDeviceList();
 	ofSoundStreamSettings settings;
 	// if you want to set the device id to be different than the default:
@@ -114,6 +110,7 @@ void ofApp::setup()
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	MidiControllers MidiCCs = MidiControllers::OSCI1_FREQ;
 	float heightPct = 0.0;
 	float tmpFreq = 0.0;
 	int i = midiMessages.size();
@@ -124,41 +121,44 @@ void ofApp::update()
 		switch (message.control)
 		{
 			// ------------------ controler 1
-			case 0: // frequency control
+			case static_cast<int>(MidiControllers::OSCI1_FREQ) : // frequency control
 				osci1->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
-			case 16: // volume
+			case static_cast<int>(MidiControllers::OSCI1_VOL): // volume
 				osci1->setVolume((float)message.value / 127.0);
 				break;
-			case 17:  // pan
+			case static_cast<int>(MidiControllers::OSCI1_PAN):  // pan
 				osci1->setPan((float)message.value / 127.0);
 				break;
-			case 32:  // sin osci
-				osci1->setWaveShape(0);
+			case static_cast<int>(MidiControllers::OSCI1_WAVE_SIN):  // sin osci
+				//osci1->setWaveShape(0);
+				osci1->setWaveShape(Oscillator::WaveShape::SIN);
 				break;
-			case 48:  // rectangle wave
-				osci1->setWaveShape(1);
+			case static_cast<int>(MidiControllers::OSCI1_WAVE_RECT):  // rectangle wave
+				//osci1->setWaveShape(1);
+				osci1->setWaveShape(Oscillator::WaveShape::RECT);
 				break;
-			case 64:  // saw wave
-				osci1->setWaveShape(2);
+			case static_cast<int>(MidiControllers::OSCI1_WAVE_SAW):  // saw wave
+				//osci1->setWaveShape(2);
+				osci1->setWaveShape(Oscillator::WaveShape::SAW);
 				break;
 			// ------------------ controler 2
-			case 2:
+			case static_cast<int>(MidiControllers::OSCI2_FREQ) : // frequency control
 				osci2->setFrequency(2000.0f * (float)message.value / 127.0);
 				break;
-			case 18: // volume
+			case static_cast<int>(MidiControllers::OSCI2_VOL): // volume
 				osci2->setVolume((float)message.value / 127.0);
 				break;
-			case 19:  // pan
+			case static_cast<int>(MidiControllers::OSCI2_PAN):  // pan
 				osci2->setPan((float)message.value / 127.0);
 				break;
-			case 34:  // sin wave
+			case static_cast<int>(MidiControllers::OSCI2_WAVE_SIN):  // sin osci
 				osci2->setWaveShape(0);
 				break;
-			case 50:  // rectangle wave
+			case static_cast<int>(MidiControllers::OSCI2_WAVE_RECT):  // rectangle wave
 				osci2->setWaveShape(1);
 				break;
-			case 66:  // saw wave
+			case static_cast<int>(MidiControllers::OSCI2_WAVE_SAW):  // saw wave
 				osci2->setWaveShape(2);
 				break;
 			// ------------------ controler 3

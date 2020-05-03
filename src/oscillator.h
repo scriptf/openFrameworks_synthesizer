@@ -16,6 +16,15 @@ public:
 	float rightScale; //  = pan;
   	float pan;   // 0.0 to 1.0
     int shape;
+    string shapeStr;
+//    enum WaveShape: int{};
+    //senum WaveShape: int{};
+    static enum WaveShape{SIN, RECT , SAW};
+
+    //enum class WaveShape;
+    
+    // static WaveShape waveShape;
+
     // lAudio[i] = buffer[i * buffer.getNumChannels()] = sample * volume * leftScale;
     // rAudio[i] = buffer[i * buffer.getNumChannels() + 1] = sample * volume * rightScale;
     vector <float> LTimeseries;
@@ -30,6 +39,7 @@ public:
     float setVolume(float volume);
     float setPan(float pan);
     float setWaveShape(int shape);
+    float setWaveShape(string shape);
     
     //float getSample(float phase); // サンプルを返す
     float getSample(); // サンプルを返す
