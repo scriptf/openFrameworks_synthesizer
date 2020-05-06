@@ -153,13 +153,16 @@ void ofApp::update()
 				osci2->setPan((float)message.value / 127.0);
 				break;
 			case static_cast<int>(MidiControllers::OSCI2_WAVE_SIN):  // sin osci
-				osci2->setWaveShape(0);
+				//osci2->setWaveShape(0);
+				osci2->setWaveShape(Oscillator::WaveShape::SIN);
 				break;
 			case static_cast<int>(MidiControllers::OSCI2_WAVE_RECT):  // rectangle wave
-				osci2->setWaveShape(1);
+				//osci2->setWaveShape(1);
+				osci2->setWaveShape(Oscillator::WaveShape::RECT);
 				break;
 			case static_cast<int>(MidiControllers::OSCI2_WAVE_SAW):  // saw wave
-				osci2->setWaveShape(2);
+				//osci2->setWaveShape(2);
+				osci2->setWaveShape(Oscillator::WaveShape::SAW);
 				break;
 			// ------------------ controler 3
 			/*
@@ -219,11 +222,11 @@ void ofApp::draw()
 	// グラフのスタイル 
 	ofSetColor(225);
 	ofDrawBitmapString("Oscillator 1", 4, 18);
-	ofDrawBitmapString("sine wave (" + ofToString(osci1->frequency) + "hz) modify with CC #0", 4, 2*18);
-	ofDrawBitmapString("volume (" + ofToString(osci1->volume) + ") modify with CC #16", 4, 3*18);
-	ofDrawBitmapString("pan (" + ofToString(osci1->pan) + ") modify with CC #1", 4, 4*18);
+	ofDrawBitmapString(osci1->shapeName + " wave (" + ofToString(osci1->frequency) + "hz) : CC #0", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci1->volume) + ") : CC #16", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci1->pan) + ") : CC #1", 4, 4*18);
 
-	//ofDrawBitmapString(ofToString(targetfrequency, 2) + "hz) modify with mouse y";
+	//ofDrawBitmapString(ofToString(targetfrequency, 2) + "hz) : mouse y";
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する
@@ -275,9 +278,9 @@ void ofApp::draw()
 	// グラフのスタイル s
 	ofSetColor(225);
 	ofDrawBitmapString("Oscillator 2", 4, 18);
-	ofDrawBitmapString("sine wave (" + ofToString(osci2->frequency) + "hz) modify with CC #2", 4, 2*18);
-	ofDrawBitmapString("volume (" + ofToString(osci2->volume) + ") modify with CC #18", 4, 3*18);
-	ofDrawBitmapString("pan (" + ofToString(osci2->pan) + ") modify with CC #19", 4, 4*18);
+	ofDrawBitmapString(osci2->shapeName + " wave (" + ofToString(osci2->frequency) + "hz) : CC #2", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci2->volume) + ") : CC #18", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci2->pan) + ") : CC #19", 4, 4*18);
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する
@@ -329,9 +332,9 @@ void ofApp::draw()
 	// グラフのスタイル 
 	ofSetColor(225);
 	ofDrawBitmapString("Oscillator 3", 4, 18);
-	ofDrawBitmapString("sine wave (" + ofToString(osci3->frequency) + "hz) modify with CC #2", 4, 2*18);
-	ofDrawBitmapString("volume (" + ofToString(osci3->volume) + ") modify with CC #18", 4, 3*18);
-	ofDrawBitmapString("pan (" + ofToString(osci3->pan) + ") modify with CC #19", 4, 4*18);
+	ofDrawBitmapString(osci3->shapeName + " wave (" + ofToString(osci3->frequency) + "hz) : CC #2", 4, 2*18);
+	ofDrawBitmapString("volume (" + ofToString(osci3->volume) + ") : CC #18", 4, 3*18);
+	ofDrawBitmapString("pan (" + ofToString(osci3->pan) + ") : CC #19", 4, 4*18);
 
 	ofSetLineWidth(1);
 	// グラフの枠を描画する

@@ -16,6 +16,7 @@ public:
 	float rightScale; //  = pan;
   	float pan;   // 0.0 to 1.0
     int shape;
+    string shapeName;
     string shapeStr;
 //    enum WaveShape: int{};
     //senum WaveShape: int{};

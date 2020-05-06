@@ -1,5 +1,7 @@
 #include "oscillator.h"
-#include<algorithm> // for std::max_element
+#include <string>
+#include <algorithm> // for std::max_element
+
 
 Oscillator::Oscillator(int bufferSize, int sampleRate,  float frequency, int midiCcVolume, int midiCcPan)
     :sampleRate(sampleRate)
@@ -17,6 +19,7 @@ Oscillator::Oscillator(int bufferSize, int sampleRate,  float frequency, int mid
     ,midiCcPan(midiCcPan)
     ,shape(0) // sin wave, 1 is rectable
     ,shapeStr("Sin")
+    ,shapeName("Sin")
 {
 //    timeseries.assign(bufferSize, 0.0);
     timeseries.assign(sampleRate, 0.0);
@@ -79,13 +82,37 @@ float Oscillator::setPan(float pan) {
 
 float Oscillator::setWaveShape(int shape) {
     this->shape = shape;
+    switch(shape){
+        case WaveShape::SIN :
+            shapeName = "Sin";
+            //shapeName("Sin");
+            break;
+        case WaveShape::RECT:
+            shapeName = "Rect";
+            //shapeName("Rect");
+            break;
+        case WaveShape::SAW:
+            shapeName = "Saw";
+            //shapeName("Saw");
+            break;           
+        default:
+            shapeName = "Sin";
+            //shapeName("Sin");
+            break;
+    }
+    
+//    transform(shapeName.begin(), shapeName.end(), shapeName.begin(), tolower());
+//    transform(shapeName.begin(), shapeName.end(), shapeName.begin(), ::tolower);
+
     updateTimeseries();
 }
 
+/*
 float Oscillator::setWaveShape(string shape) {
     this->shapeStr = shape;
     updateTimeseries();
 }
+*/
 
 /**
  * sin(phase) generates normalized wave -1.0 to 1.0.
