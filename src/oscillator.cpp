@@ -100,7 +100,16 @@ float Oscillator::setWaveShape(int shape) {
             //shapeName("Sin");
             break;
     }
-    
+    	
+    // convert string to back to lower case
+    //boost::to_lower(shapeName);
+
+	// convert string to back to lower case
+	/*
+    std::for_each(shapeName.begin(), shapeName.end(), [](char & c) {
+		c = ::tolower(c);
+	});
+    */
 //    transform(shapeName.begin(), shapeName.end(), shapeName.begin(), tolower());
 //    transform(shapeName.begin(), shapeName.end(), shapeName.begin(), ::tolower);
 
