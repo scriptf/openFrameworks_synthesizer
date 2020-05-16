@@ -1,1 +1,2 @@
+ofxGuiExtended
 ofxMidi
